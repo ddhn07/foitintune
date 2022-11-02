@@ -63,6 +63,7 @@ $AutopilotOOBEJson = @'
     "GroupTagOptions":  [  
    "En till en - GVF Teknik",
    "En till en - KTC",
+   "En till en - CSU",
    "En till en - Fredricelundsskolan",
    "En till flera - Fredricelundsskolan",
    "En till en - Frodingskolan",

@@ -17,7 +17,7 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 #   [OS] Params and Start-OSDCloud
 #=======================================================================
 $Params = @{
-    OSName = "Windows 11 22H2 x64"
+    OSName = "Windows 11 23H2 x64"
     OSLicense = "Retail"
     OSEdition = "Pro"
     OSLanguage = "sv-se"

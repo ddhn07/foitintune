@@ -1,4 +1,4 @@
-﻿Write-Host  -ForegroundColor Cyan 'Windows 11 24H2 Pro Autopilot'
+﻿Write-Host  -ForegroundColor Cyan 'Windows 11 25H2 Pro Autopilot'
 #================================================
 #   [PreOS] Update Module
 #================================================
@@ -17,7 +17,7 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 #   [OS] Params and Start-OSDCloud
 #=======================================================================
 $Params = @{
-    OSName = "Windows 11 24H2 x64"
+    OSName = "Windows 11 25H2 x64"
     OSLicense = "Retail"
     OSEdition = "Pro"
     OSLanguage = "sv-se"
@@ -226,3 +226,4 @@ $SetupCompleteCMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\SetupComplete.c
 Write-Host  -ForegroundColor Green "Restarting in 5 seconds!"
 Start-Sleep -Seconds 5
 wpeutil reboot
+

@@ -213,12 +213,23 @@ $AutopilotCMD | Out-File -FilePath 'C:\Windows\System32\Karlstad.cmd' -Encoding 
 #================================================
 #  [PostOS] SetupComplete CMD Command Line
 #================================================
-Write-Host -ForegroundColor Green "Create C:\Windows\Setup\Scripts\SetupComplete.cmd"
-$SetupCompleteCMD = @'
+#Write-Host -ForegroundColor Green "Create C:\Windows\Setup\Scripts\SetupComplete.cmd"
+#$SetupCompleteCMD = @'
+#RD C:\OSDCloud\OS /S /Q
+#RD C:\Drivers /S /Q
+#'@
+#$SetupCompleteCMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\SetupComplete.cmd' -Encoding ascii -Force
+
+#================================================
+#  [PostOS] APPEND SetupComplete CMD Command Line
+#================================================
+Write-Host -ForegroundColor Green "Append C:\Windows\Setup\Scripts\SetupComplete.cmd"
+$CleanupLines = @'
+
 RD C:\OSDCloud\OS /S /Q
 RD C:\Drivers /S /Q
 '@
-$SetupCompleteCMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\SetupComplete.cmd' -Encoding ascii -Force
+Add-Content -Path 'C:\Windows\Setup\Scripts\SetupComplete.cmd' -Value $CleanupLines -Encoding ascii
 
 #=======================================================================
 #   Restart-Computer

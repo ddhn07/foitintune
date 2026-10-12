@@ -1,4 +1,4 @@
-﻿Write-Host  -ForegroundColor Cyan 'Windows 11 26H2 Pro Autopilot'
+﻿Write-Host  -ForegroundColor Cyan 'Windows 11 25H2 Pro Autopilot'
 #================================================
 #   [PreOS] Update Module
 #================================================
@@ -6,6 +6,19 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
     Set-DisRes 1600
 }
+
+
+$OSDVersion = '26.8.1.1'
+
+# Unload any newer OSD that's already loaded
+Get-Module OSD | Remove-Module -Force -ErrorAction SilentlyContinue
+
+# Install the pinned version (only if not already present)
+if (-not (Get-Module -ListAvailable OSD | Where-Object Version -eq $OSDVersion)) {
+    Install-Module OSD -RequiredVersion $OSDVersion -Force -SkipPublisherCheck
+}
+
+Import-Module OSD -RequiredVersion $OSDVersion -Force
 
 #Write-Host -ForegroundColor Green "Updating OSD PowerShell Module"
 #Install-Module OSD -Force
@@ -17,7 +30,7 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 #   [OS] Params and Start-OSDCloud
 #=======================================================================
 $Params = @{
-    OSName = "Windows 11 26H2 x64"
+    OSName = "Windows 11 25H2 x64"
     OSLicense = "Retail"
     OSEdition = "Pro"
     OSLanguage = "sv-se"

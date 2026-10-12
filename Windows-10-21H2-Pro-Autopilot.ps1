@@ -1,4 +1,4 @@
-﻿Write-Host  -ForegroundColor Cyan 'Windows 11 25H2 Pro Autopilot'
+﻿Write-Host  -ForegroundColor Cyan 'Windows 11 26H2 Pro Autopilot'
 #================================================
 #   [PreOS] Update Module
 #================================================
@@ -8,17 +8,30 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 }
 
 
-$OSDVersion = '26.8.1.1'
+#================================================
+#   [Stage 0] Allow Dism to load, then rerun in a fresh PowerShell process
+#================================================
+$ScriptUrl = 'https://github.com/ddhn07/foitintune/edit/main/Windows-10-21H2-Pro-Autopilot.ps1'
 
-# Unload any newer OSD that's already loaded
-Get-Module OSD | Remove-Module -Force -ErrorAction SilentlyContinue
+if (-not $env:OSD_RELAUNCHED) {
+    $cfg = 'X:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe.config'
+    [xml]$xml = if (Test-Path $cfg) { Get-Content $cfg -Raw } else { '<configuration/>' }
+    $root    = $xml.DocumentElement
+    $runtime = $root.SelectSingleNode('runtime')
+    if (-not $runtime) { $runtime = $root.AppendChild($xml.CreateElement('runtime')) }
+    $node = $runtime.SelectSingleNode('loadFromRemoteSources')
+    if (-not $node) { $node = $runtime.AppendChild($xml.CreateElement('loadFromRemoteSources')) }
+    $node.SetAttribute('enabled','true')
+    $xml.Save($cfg)
 
-# Install the pinned version (only if not already present)
-if (-not (Get-Module -ListAvailable OSD | Where-Object Version -eq $OSDVersion)) {
-    Install-Module OSD -RequiredVersion $OSDVersion -Force -SkipPublisherCheck
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    $local = 'X:\OSDCloudStage.ps1'
+    (New-Object System.Net.WebClient).DownloadFile($ScriptUrl, $local)
+
+    $env:OSD_RELAUNCHED = '1'    # inherited by the child; prevents a relaunch loop
+    Start-Process powershell.exe -Wait -NoNewWindow -ArgumentList '-NoL','-ExecutionPolicy','Bypass','-File',$local
+    return
 }
-
-Import-Module OSD -RequiredVersion $OSDVersion -Force
 
 #Write-Host -ForegroundColor Green "Updating OSD PowerShell Module"
 #Install-Module OSD -Force
@@ -30,7 +43,7 @@ Import-Module OSD -RequiredVersion $OSDVersion -Force
 #   [OS] Params and Start-OSDCloud
 #=======================================================================
 $Params = @{
-    OSName = "Windows 11 25H2 x64"
+    OSName = "Windows 11 26H2 x64"
     OSLicense = "Retail"
     OSEdition = "Pro"
     OSLanguage = "sv-se"

@@ -10,7 +10,7 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 #================================================
 #   [Stage 0] Allow Dism to load, then rerun in a fresh PowerShell process
 #================================================
-$ScriptUrl = 'https://github.com/ddhn07/foitintune/edit/main/Windows-10-21H2-Pro-Autopilot.ps1'
+$ScriptUrl = 'https://raw.githubusercontent.com/ddhn07/foitintune/refs/heads/main/Windows-10-21H2-Pro-Autopilot.ps1'
 
 if (-not $env:OSD_RELAUNCHED) {
     $cfg = 'X:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe.config'

@@ -32,7 +32,7 @@ if (-not $env:OSD_RELAUNCHED) {
     Start-Process powershell.exe -Wait -NoNewWindow -ArgumentList '-NoL','-ExecutionPolicy','Bypass','-File',$local
     return
 }
-
+Start-Sleep -seconds 60
 #Write-Host -ForegroundColor Green "Updating OSD PowerShell Module"
 #Install-Module OSD -Force
 

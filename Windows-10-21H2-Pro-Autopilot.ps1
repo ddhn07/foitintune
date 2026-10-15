@@ -1,4 +1,4 @@
-﻿Write-Host  -ForegroundColor Cyan 'Windows 11 26H2 Pro Autopilot'
+Write-Host  -ForegroundColor Cyan 'Windows 11 26H2 Pro Autopilot'
 #================================================
 #   [PreOS] Update Module
 #================================================
@@ -6,7 +6,6 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
     Set-DisRes 1600
 }
-
 
 #================================================
 #   [Stage 0] Allow Dism to load, then rerun in a fresh PowerShell process
@@ -32,49 +31,28 @@ if (-not $env:OSD_RELAUNCHED) {
     Start-Process powershell.exe -Wait -NoNewWindow -ArgumentList '-NoL','-ExecutionPolicy','Bypass','-File',$local
     return
 }
-Start-Sleep -seconds 60
-#Write-Host -ForegroundColor Green "Updating OSD PowerShell Module"
-#Install-Module OSD -Force
-
-#Write-Host  -ForegroundColor Green "Importing OSD PowerShell Module"
-#Import-Module OSD -Force   
 
 #=======================================================================
-#   [OS] Params and Start-OSDCloud
+#   [OS] Global variables, params and Start-OSDCloud
 #=======================================================================
+
+$Global:MyOSDCloud = [ordered]@{
+    RecoveryPartition = [bool]$true
+    WindowsUpdate = [bool]$true
+    WindowsUpdateDrivers = [bool]$true
+    WindowsDefenderUpdate = [bool]$true
+}
+
 $Params = @{
     OSName = "Windows 11 26H2 x64"
-    OSLicense = "Retail"
+    OSActivation = "Retail"
     OSEdition = "Pro"
     OSLanguage = "sv-se"
     ZTI = $true
+    Firmware = $true
 }
-Start-OSDCloud @Params
 
-#================================================
-#  [PostOS] OOBEDeploy Configuration
-#================================================
-Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json"
-$OOBEDeployJson = @'
-{
-    "Autopilot":  {
-                      "IsPresent":  false
-                  },
-    "AddNetFX3":  {
-                      "IsPresent":  true
-                    },                     
-    "UpdateDrivers":  {
-                          "IsPresent":  true
-                      },
-    "UpdateWindows":  {
-                          "IsPresent":  true
-                      }
-}
-'@
-If (!(Test-Path "C:\ProgramData\OSDeploy")) {
-    New-Item "C:\ProgramData\OSDeploy" -ItemType Directory -Force | Out-Null
-}
-$OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
+Start-OSDCloud @Params
 
 #================================================
 #  [PostOS] AutopilotOOBE Configuration Staging
@@ -85,10 +63,8 @@ $AutopilotOOBEJson = @'
     "Assign":  {
                    "IsPresent":  true
                },
-    "GroupTag":  "En till en - GVF",
-    "GroupTagOptions":  [  
-   "En till en - GVF Teknik",
-   "En till en - KTC",
+    "GroupTag":  "Write your groupTag or select from list",
+    "GroupTagOptions":  [
    "En till en - CSU",
    "En till en - Fredricelundsskolan",
    "En till flera - Fredricelundsskolan",
@@ -152,7 +128,8 @@ $AutopilotOOBEJson = @'
    "En till en - Sundsta-Alvkullegymnasiet KTC",
    "En till en - Sundsta-Alvkullegymnasiet TEKNIK",
    "En till flera - Sundsta-Alvkullegymnasiet",
-   "En till flera - Sundsta-Alvkullegymnasiet KIOSK"
+   "En till flera - Sundsta-Alvkullegymnasiet KIOSK",
+   "En till flera - Sundsta-Alvkullegymnasiet KTC"
                     ],
     "Hidden":  [
                    "AddToGroup",
@@ -173,53 +150,10 @@ If (!(Test-Path "C:\ProgramData\OSDeploy")) {
 $AutopilotOOBEJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json" -Encoding ascii -Force
 
 #=================================================
-#	UnattendXml
-#=================================================
-$UnattendXml = @'
-<?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
-    <settings pass="specialize">
-        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RunSynchronous>
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>1</Order>
-                    <Description>OSDCloud Specialize</Description>
-                    <Path>Powershell -ExecutionPolicy Bypass -Command Invoke-OSDSpecialize -Verbose</Path>
-                </RunSynchronousCommand>
-            </RunSynchronous>
-        </component>
-    </settings>
-</unattend>
-'@
-
-#=================================================
-#	Directories
-#=================================================
-if (-NOT (Test-Path 'C:\Windows\Panther')) {
-    New-Item -Path 'C:\Windows\Panther'-ItemType Directory -Force -ErrorAction Stop | Out-Null
-}
-
-#=================================================
-#	Panther Unattend
-#=================================================
-$Panther = 'C:\Windows\Panther'
-$UnattendPath = "$Panther\Unattend.xml"
-Write-Verbose -Verbose "Setting $UnattendPath"
-$UnattendXml | Out-File -FilePath $UnattendPath -Encoding utf8 -Width 2000 -Force
-
-#=================================================
 #	Copy PSModule
 #=================================================
 Write-Verbose -Verbose "Copy-PSModuleToFolder -Name OSD to C:\Program Files\WindowsPowerShell\Modules"
 Copy-PSModuleToFolder -Name OSD -Destination 'C:\Program Files\WindowsPowerShell\Modules'
-
-#=================================================
-#	Use-WindowsUnattend
-#=================================================
-Write-Verbose -Verbose "Use-WindowsUnattend -Path 'C:\' -UnattendPath $UnattendPath"
-Use-WindowsUnattend -Path 'C:\' -UnattendPath $UnattendPath -Verbose
-#Notepad $UnattendPath
-#=================================================
 
 #================================================
 #  [PostOS] AutopilotOOBE CMD Command Line
@@ -231,20 +165,10 @@ Set Path = %PATH%;C:\Program Files\WindowsPowerShell\Scripts
 Start /Wait PowerShell -NoL -C Install-Module AutopilotOOBE -Force -Verbose
 Start /Wait PowerShell -NoL -C Install-Module OSD -Force -Verbose
 Start /Wait PowerShell -NoL -C Start-AutopilotOOBE
-#Start /Wait PowerShell -NoL -C Start-OOBEDeploy
-#Start /Wait PowerShell -NoL -C Restart-Computer -Force
+Start /Wait PowerShell -NoL -C Start-OOBEDeploy
+REM Start /Wait PowerShell -NoL -C Restart-Computer -Force
 '@
 $AutopilotCMD | Out-File -FilePath 'C:\Windows\System32\Karlstad.cmd' -Encoding ascii -Force
-
-#================================================
-#  [PostOS] SetupComplete CMD Command Line
-#================================================
-#Write-Host -ForegroundColor Green "Create C:\Windows\Setup\Scripts\SetupComplete.cmd"
-#$SetupCompleteCMD = @'
-#RD C:\OSDCloud\OS /S /Q
-#RD C:\Drivers /S /Q
-#'@
-#$SetupCompleteCMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\SetupComplete.cmd' -Encoding ascii -Force
 
 #================================================
 #  [PostOS] APPEND SetupComplete CMD Command Line
